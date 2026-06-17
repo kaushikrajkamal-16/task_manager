@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const jwt = require("jsonwebtoken");
 
 function isValidEmail(email) {
   const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -20,4 +21,14 @@ const generateSecureOTP = () => {
   return crypto.randomInt(100000, 999999).toString();
 };
 
-module.exports = { isValidEmail, StrongPassword, generateSecureOTP };
+const generateAccessToken = (user) => {
+  const token = jwt.sign(user, process.env.JWT_SEC);
+  return token;
+};
+
+module.exports = {
+  isValidEmail,
+  StrongPassword,
+  generateSecureOTP,
+  generateAccessToken,
+};

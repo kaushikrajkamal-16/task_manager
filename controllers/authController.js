@@ -3,6 +3,7 @@ const {
   isValidEmail,
   StrongPassword,
   generateSecureOTP,
+  generateAccessToken,
 } = require("../helpers/utils");
 const authSchema = require("../models/authSchema");
 
@@ -73,11 +74,20 @@ const login = async (req, res) => {
   try {
     const user = await authSchema.findOne({ email });
 
+    console.log(user);
+
     if (!user) res.status(400).send("Invalid Credential");
     if (!user.isVerified) (res.status(400), send("Email is not verified"));
 
     const matchPass = await user.comparePassword(password);
     if (!matchPass) return res.status(400).send("Password is incorrect");
+
+    const accessToken = generateAccessToken({
+      _id: user._id,
+      email: user.email,
+    });
+
+    res.cookie("accessToken", accessToken);
 
     res.status(200).send("Login Successfully");
   } catch (error) {
@@ -86,4 +96,17 @@ const login = async (req, res) => {
   }
 };
 
-module.exports = { registration, verifyOTP, login };
+const userProfile = async (req, res) => {
+  try {
+    const userData = await authSchema
+      .findOne({ _id: req.user._id })
+      .select("avatar fullName email");
+
+    if (!userData) res.status(400).send("User not found");
+    res.status(200).send(userData);
+  } catch (error) {
+    res.status(500).send("Internal Server Error");
+  }
+};
+
+module.exports = { registration, verifyOTP, login, userProfile };
